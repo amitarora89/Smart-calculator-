@@ -1,0 +1,149 @@
+
+
+import tkinter as tk
+import math
+
+# Function to handle button clicks
+def button_click(event):
+    text = event.widget.cget("text")
+    if text == "=":
+        calculate_result()
+    elif text == "0000":
+        display.insert(tk.END, "0000")
+        auto_calculate()  # Call auto_calculate after appending "0000"
+    elif text == "AC":
+        display.delete("1.0", tk.END)
+        result_label.config(text="")  # Clear the result label
+    elif text == "←":
+        display.delete("end-2c", tk.END)
+    elif text == "CE":
+        display.delete("1.0", tk.END)
+    elif text == "±":
+        try:
+            current_value = float(display.get("1.0", tk.END).strip())
+            display.delete("1.0", tk.END)
+            display.insert(tk.END, str(-current_value))
+        except:
+            display.delete("1.0", tk.END)
+            display.insert(tk.END, "Error")
+    elif text == "x²":
+        try:
+            current_value = float(display.get("1.0", tk.END).strip())
+            display.delete("1.0", tk.END)
+            display.insert(tk.END, str(current_value ** 2))
+        except:
+            display.delete("1.0", tk.END)
+            display.insert(tk.END, "Error")
+    elif text == "√":
+        try:
+            current_value = float(display.get("1.0", tk.END).strip())
+            display.delete("1.0", tk.END)
+            display.insert(tk.END, str(math.sqrt(current_value)))
+        except:
+            display.delete("1.0", tk.END)
+            display.insert(tk.END, "Error")
+    elif text == "%":
+        try:
+            expression = display.get("1.0", tk.END).strip()
+            if "+" in expression:
+                parts = expression.split("+")
+                value = float(parts[0])
+                percent = float(parts[1].strip("%"))
+                result = value + (value * percent / 100)
+            elif "-" in expression:
+                parts = expression.split("-")
+                value = float(parts[0])
+                percent = float(parts[1].strip("%"))
+                result = value - (value * percent / 100)
+            elif "×" in expression or "*" in expression:
+                parts = expression.split("×") if "×" in expression else expression.split("*")
+                value = float(parts[0])
+                percent = float(parts[1].strip("%"))
+                result = value * (percent / 100)
+            elif "÷" in expression or "/" in expression:
+                parts = expression.split("÷") if "÷" in expression else expression.split("/")
+                value = float(parts[0])
+                percent = float(parts[1].strip("%"))
+                result = value / (percent / 100)
+            else:
+                result = float(expression.strip("%")) / 100
+            display.delete("1.0", tk.END)
+            display.insert(tk.END, str(result))
+        except:
+            display.delete("1.0", tk.END)
+            display.insert(tk.END, "Error")
+    else:
+        display.insert(tk.END, text)
+        auto_calculate()
+
+# Function to calculate result automatically
+def auto_calculate():
+    try:
+        expression = display.get("1.0", tk.END).strip().replace("×", "*").replace("÷", "/")
+        if expression and expression[-1] not in ["+", "-", "*", "/"]:
+            result = str(eval(expression))
+            result_label.config(text=f"= {result}")  # Display result without spaces
+        else:
+            result_label.config(text="")
+    except:
+        result_label.config(text="Error")
+
+# Function to calculate result on pressing "="
+def calculate_result():
+    try:
+        expression = display.get("1.0", tk.END).strip().replace("×", "*").replace("÷", "/")
+        if expression:
+            result = str(eval(expression))
+            display.delete("1.0", tk.END)
+            display.insert(tk.END, result)
+            result_label.config(text="")
+    except:
+        display.delete("1.0", tk.END)
+        display.insert(tk.END, "Error")
+
+# Create the main window
+root = tk.Tk()
+root.title("Professional Calculator")
+root.geometry("400x650")
+root.configure(bg="#f0f0f0")
+
+# Create the display
+display = tk.Text(root, font=("Arial", 12), height=4, bd=10, relief=tk.RIDGE, wrap=tk.WORD)
+display.pack(fill=tk.BOTH, padx=10, pady=10)
+
+# Create a label for auto-calculate result (aligned to the left)
+result_label = tk.Label(root, font=("Arial", 12), bg="#f0f0f0", fg="black", anchor="w")
+result_label.pack(fill=tk.BOTH, padx=10, pady=(0, 10))
+
+# Create a frame for the buttons
+button_frame = tk.Frame(root, bg="#f0f0f0")
+button_frame.pack(fill=tk.BOTH, expand=True)
+
+# Button layout
+buttons = [
+    ("7", 1, 0), ("8", 1, 1), ("9", 1, 2), ("÷", 1, 3), ("AC", 1, 4),
+    ("4", 2, 0), ("5", 2, 1), ("6", 2, 2), ("×", 2, 3), ("0000", 2, 4),
+    ("1", 3, 0), ("2", 3, 1), ("3", 3, 2), ("-", 3, 3), ("←", 3, 4),
+    ("0", 4, 0), (".", 4, 1), ("00", 4, 2), ("000", 4, 3), ("+", 4, 4),
+    ("±", 5, 0), ("x²", 5, 1), ("√", 5, 2), ("%", 5, 3), ("=", 5, 4)
+]
+
+# Add buttons to the frame
+for (text, row, col) in buttons:
+    if text in ["+", "-", "×", "÷", "=", "AC"]:
+        button = tk.Button(button_frame, text=text, font=("Arial", 20), bg="red", fg="white", bd=5, relief=tk.RAISED)
+    elif text == "0000":
+        button = tk.Button(button_frame, text=text, font=("Arial", 14), bg="maroon", fg="white", bd=5, relief=tk.RAISED)
+    else:
+        button = tk.Button(button_frame, text=text, font=("Arial", 14), bg="white", fg="black", bd=5, relief=tk.RAISED)
+    button.grid(row=row, column=col, sticky="nsew", padx=2, pady=2)
+    button.bind("<Button-1>", button_click)
+
+# Configure row and column weights for resizing
+for i in range(6):
+    button_frame.grid_rowconfigure(i, weight=1)
+for j in range(5):
+    button_frame.grid_columnconfigure(j, weight=1)
+
+# Run the application
+root.
